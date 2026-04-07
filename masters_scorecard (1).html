@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masters Tournament Scorecard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, 'Times New Roman', serif; background: #1a3a1a; min-height: 100vh; padding: 20px 10px; color: #222; }
+.page-wrapper { max-width: 1180px; margin: 0 auto; }
+.header { text-align: center; margin-bottom: 28px; }
+.flag-bar { display: flex; justify-content: center; gap: 6px; margin-bottom: 10px; }
+.flag-bar span { width: 28px; height: 10px; border-radius: 1px; }
+.flag-bar span:nth-child(odd) { background: #ffd700; }
+.flag-bar span:nth-child(even) { background: #006400; }
+.header h1 { font-size: 32px; font-weight: 700; color: #fff; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+.header h2 { font-size: 15px; color: #c8e6a0; letter-spacing: 4px; text-transform: uppercase; margin-top: 4px; font-weight: 400; }
+.header .year { font-size: 13px; color: #a0c07a; margin-top: 3px; letter-spacing: 2px; }
+
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 700px) {
+  body { padding: 12px 6px; }
+  .header h1 { font-size: 20px; letter-spacing: 1px; }
+  .header h2 { font-size: 11px; letter-spacing: 2px; }
+  .header .year { font-size: 11px; }
+  .flag-bar span { width: 18px; height: 7px; }
+  table { font-size: 11px; }
+  .col-header th { font-size: 10px; padding: 7px 3px; letter-spacing: 0.5px; }
+  .col-header th:first-child { padding-left: 8px; }
+  td.rlabel { padding: 6px 4px 6px 10px; font-size: 11px; }
+  td.rlabel strong { font-size: 11px; }
+  td.sc { padding: 4px 3px; }
+  input.si { width: 38px !important; height: 26px !important; font-size: 13px !important; }
+  .am-grid { gap: 2px; }
+  .tt-num { font-size: 18px; }
+  .tt-label { font-size: 9px; }
+  td.team-total-box { padding: 4px 2px; width: 60px; }
+  .snum { font-size: 14px; }
+  .standings-row { padding: 6px 8px; }
+  .standings-name { font-size: 12px; }
+  .standings-score { font-size: 16px; }
+  .am-name { font-size: 9px; }
+  .section-hdr td { font-size: 9px; padding: 3px 4px 3px 10px; }
+}
+.card { background: #faf9f5; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.45); border: 1px solid #d4c88a; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+/* Column headers */
+.col-header th { background: #2d5a27; color: #faf9f5; text-align: center; padding: 10px 6px; font-weight: 600; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; border-right: 1px solid #3d7a37; }
+.col-header th:first-child { text-align: left; padding-left: 16px; width: 165px; }
+.col-header th:last-child { border-right: none; background: #1e4019; }
+.col-header .team-th { background: #1e4019; width: 90px; }
+
+/* Team header */
+.team-hdr td { background: #4a7c3f; color: #fff; font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; padding: 8px 16px; border-top: 2px solid #d4c88a; }
+.team-hdr td.team-total-hdr { background: #2d5a27; border-left: 2px solid #d4c88a; text-align: center; }
+
+/* Section labels */
+.section-hdr td { background: #e8f0e4; color: #2d5a27; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 8px 4px 20px; border-bottom: 1px solid #d0dcc8; }
+
+/* Row label */
+td.rlabel { background: #faf9f5; vertical-align: middle; padding: 8px 8px 8px 20px; color: #555; font-size: 12px; border-right: 1px solid #e0dcc8; border-bottom: 1px solid #e8e5d8; white-space: nowrap; }
+td.rlabel strong { display: block; font-style: normal; font-weight: 600; color: #2d5a27; font-size: 13px; }
+tr.am-row td.rlabel { background: #f8f6ee; }
+
+/* Score cells */
+td.sc { text-align: center; vertical-align: middle; padding: 6px 5px; border-right: 1px solid #e8e5d8; border-bottom: 1px solid #e8e5d8; background: #fff; }
+tr.am-row td.sc { background: #f8f6ee; }
+td.sc.subtotal { background: #f0ede0; border-right: 1px solid #ddd8c0; }
+tr.am-row td.sc.subtotal { background: #ece9d8; }
+
+/* Team total box (rowspanned) */
+td.team-total-box { background: #2d5a27; text-align: center; vertical-align: middle; border-left: 2px solid #d4c88a; border-bottom: 2px solid #d4c88a; padding: 8px 4px; width: 90px; }
+.tt-label { font-size: 10px; color: #9cc88a; letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.tt-num { font-size: 26px; font-weight: 700; color: #fff; display: block; line-height: 32px; }
+.tt-under { color: #ff9999 !important; }
+
+
+/* Score input */
+input.si { width: 54px; height: 34px; border: 1px solid #c8c4a8; border-radius: 4px; background: #fffef8; font-family: Georgia, serif; font-size: 18px; font-weight: 600; text-align: center; outline: none; color: #222; display: block; margin: 0 auto; transition: border-color 0.15s; -moz-appearance: textfield; }
+input.si::-webkit-outer-spin-button, input.si::-webkit-inner-spin-button { -webkit-appearance: none; }
+input.si:focus { border-color: #2d5a27; background: #f8fff8; }
+
+/* Amateur grid inside cell */
+.am-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.am-player { text-align: center; }
+.am-name { font-size: 10px; color: #888; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.am-name.used { color: #2d5a27; font-weight: 600; }
+
+/* Score display spans */
+.snum { font-size: 20px; font-weight: 700; }
+.snum.under-par { color: #cc0000; }
+.snum.over-par  { color: #222; }
+.snum.even-par  { color: #222; }
+
+/* Best-score highlight */
+input.si.best-score { border-color: #2d5a27; background: #f0faf0; }
+
+/* Legend */
+.legend { display: flex; gap: 20px; justify-content: flex-end; padding: 10px 16px; background: #f0ede0; border-top: 1px solid #ddd8c0; font-size: 11px; color: #666; font-style: italic; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-under { background: #cc0000; }
+.dot-best  { background: #2d5a27; }
+
+/* Standings */
+.standings.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 700px) {
+  body { padding: 12px 6px; }
+  .header h1 { font-size: 20px; letter-spacing: 1px; }
+  .header h2 { font-size: 11px; letter-spacing: 2px; }
+  .header .year { font-size: 11px; }
+  .flag-bar span { width: 18px; height: 7px; }
+  table { font-size: 11px; }
+  .col-header th { font-size: 10px; padding: 7px 3px; letter-spacing: 0.5px; }
+  .col-header th:first-child { padding-left: 8px; }
+  td.rlabel { padding: 6px 4px 6px 10px; font-size: 11px; }
+  td.rlabel strong { font-size: 11px; }
+  td.sc { padding: 4px 3px; }
+  input.si { width: 38px !important; height: 26px !important; font-size: 13px !important; }
+  .am-grid { gap: 2px; }
+  .tt-num { font-size: 18px; }
+  .tt-label { font-size: 9px; }
+  td.team-total-box { padding: 4px 2px; width: 60px; }
+  .snum { font-size: 14px; }
+  .standings-row { padding: 6px 8px; }
+  .standings-name { font-size: 12px; }
+  .standings-score { font-size: 16px; }
+  .am-name { font-size: 9px; }
+  .section-hdr td { font-size: 9px; padding: 3px 4px 3px 10px; }
+}
+.card { background: #faf9f5; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.45); border: 1px solid #d4c88a; overflow: hidden; }
+.standings-card { background: #faf9f5; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.45); border: 1px solid #d4c88a; overflow: hidden; margin-bottom: 20px; }
+.standings-header { background: #2d5a27; color: #fff; padding: 12px 20px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+.standings-body { padding: 14px 16px; background: #faf9f5; }
+.standings-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #d4c88a; background: #fff; }
+.standings-row:first-child { border: 2px solid #d4c88a; background: #fffef5; }
+.standings-row:last-child { margin-bottom: 0; }
+.standings-pos { font-size: 20px; font-weight: 700; color: #2d5a27; width: 36px; }
+.standings-name { font-size: 17px; font-weight: 600; color: #1a1a1a; flex: 1; }
+.standings-score { font-size: 26px; font-weight: 700; min-width: 60px; text-align: right; }
+.standings-score.under-par { color: #cc0000; }
+.standings-score.over-par  { color: #222; }
+.standings-score.even-par  { color: #222; }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <div class="header">
+    <div class="flag-bar"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <h1>The Masters Tournament</h1>
+    <h2>Augusta National Golf Club</h2>
+    <div class="year">2025 · Fantasy Scorecard</div>
+  </div>
+
+  <div class="card">
+    <div class="table-scroll">
+    <table id="scorecard">
+      <thead>
+        <tr class="col-header">
+          <th>Team / Row</th>
+          <th>Thursday</th>
+          <th>Friday</th>
+          <th>Saturday</th>
+          <th>Sunday</th>
+          <th>Subtotal</th>
+          <th class="team-th">Team Total</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot dot-under"></div> Under par (red)</div>
+      <div class="legend-item"><div class="legend-dot dot-over"></div> Even / over par (black)</div>
+      <div class="legend-item"><div class="legend-dot dot-best" style="border:1px solid #2d5a27;background:#f0faf0;border-radius:2px;width:14px;height:10px;"></div> Best 2 scores (counted)</div>
+    </div>
+  </div>
+
+  <div class="standings-card">
+    <div class="standings-header">Team Standings</div>
+    <div class="standings-body" id="standings-body"></div>
+  </div>
+</div>
+
+<script>
+const DAYS = ['Thursday','Friday','Saturday','Sunday'];
+
+const TEAMS = [
+  {
+    key: 'Dean', label: 'Team Dean',
+    pros: ['Scheffler','Rahm','Fleetwood','Young'],
+    amateurs: ['Dean','Wyatt','Klovens','Drew','Santos']
+  },
+  {
+    key: 'Dustin', label: 'Team Dustin',
+    pros: ['DeChambeau','Aberg','McIlroy','Matsuyama'],
+    amateurs: ['Dustin','Chase','Mitch','Meep','Dan']
+  },
+  {
+    key: 'Brandon', label: 'Team Brandon',
+    pros: ['Schauffele','Koepka','Gotterup','Day'],
+    amateurs: ['Brandon','Rob','Berkson','Sam','Clark']
+  }
+];
+
+// state[teamKey].proDay[day] = { pro: '', score: '' }
+// state[teamKey].amR1[amName] = score string
+// state[teamKey].amR2[amName] = score string
+const S = {};
+TEAMS.forEach(t => {
+  S[t.key] = {
+    proDay: {},
+    amR1: {},
+    amR2: {}
+  };
+  DAYS.forEach(d => S[t.key].proDay[d] = { pro: '', score: '' });
+  t.amateurs.forEach(a => { S[t.key].amR1[a] = ''; S[t.key].amR2[a] = ''; });
+});
+
+function sc(val) {
+  const n = parseInt(val, 10);
+  if (isNaN(n) || val === '') return '';
+  return n < 0 ? 'under-par' : (n > 0 ? 'over-par' : 'even-par');
+}
+function fmt(val) {
+  const n = parseInt(val, 10);
+  if (isNaN(n)) return '—';
+  return n > 0 ? '+'+n : String(n);
+}
+function sumArr(arr) {
+  let s = null;
+  arr.forEach(v => { const n = parseInt(v,10); if(!isNaN(n)) s=(s||0)+n; });
+  return s;
+}
+function best2(arr) {
+  const nums = arr.map(v => parseInt(v,10)).filter(n => !isNaN(n));
+  if (nums.length === 0) return { total: null, indices: [] };
+  const sorted = [...nums].sort((a,b) => a-b).slice(0, 2);
+  // find indices of best 2 (greedy lowest first)
+  const usedIdx = new Set();
+  sorted.forEach(val => {
+    for (let i=0; i<arr.length; i++) {
+      if (!usedIdx.has(i) && parseInt(arr[i],10) === val) { usedIdx.add(i); break; }
+    }
+  });
+  return { total: sorted.reduce((a,b)=>a+b,0), indices: [...usedIdx] };
+}
+
+function scoreSpan(val) {
+  if (val==='' || val===null) return '';
+  const n = parseInt(val,10);
+  if (isNaN(n)) return '';
+  return `<span class="snum ${sc(val)}">${fmt(val)}</span>`;
+}
+
+function buildTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  TEAMS.forEach(team => {
+    // rowspan = team-hdr + pro-sec-hdr + pro-row + am-sec-hdr + am-r1-row + am-r2-row + am-best-row = 7
+    const rowspan = 7;
+
+    // --- Team header row ---
+    const thr = document.createElement('tr');
+    thr.className = 'team-hdr';
+    thr.innerHTML = `<td colspan="6">${team.label}</td>
+      <td class="team-total-box" rowspan="${rowspan}" id="tt-${team.key}">
+        <span class="tt-label">Team Total</span>
+        <span class="tt-num" id="ttn-${team.key}">—</span>
+      </td>`;
+    tbody.appendChild(thr);
+
+    // --- Pro section header ---
+    const psh = document.createElement('tr');
+    psh.className = 'section-hdr';
+    psh.innerHTML = '<td colspan="6">Pro Scores</td>';
+    tbody.appendChild(psh);
+
+    // --- Single pro row with projected name label + score input per day ---
+    const pr = document.createElement('tr');
+    pr.id = `prorow-${team.key}`;
+    let phtml = `<td class="rlabel"><strong>Pro Scores</strong></td>`;
+    DAYS.forEach((day, idx) => {
+      const proName = team.pros[idx];
+      const scoreVal = S[team.key].proDay[day].score;
+      phtml += `<td class="sc">
+        <div style="font-size:11px;color:#888;font-style:italic;margin-bottom:4px">${proName}</div>
+        <input class="si${scoreVal?' '+sc(scoreVal):''}" type="text" inputmode="numeric" placeholder=""
+          value="${scoreVal}" data-team="${team.key}" data-day="${day}" data-type="pro"
+          oninput="handleProScore(this)">
+      </td>`;
+    });
+    const proScores = DAYS.map(d => S[team.key].proDay[d].score);
+    const proTotal = sumArr(proScores);
+    phtml += `<td class="sc subtotal" id="prosub-${team.key}">${proTotal!==null?scoreSpan(proTotal):''}</td>`;
+    pr.innerHTML = phtml;
+    tbody.appendChild(pr);
+
+    // --- Amateur section header ---
+    const ash = document.createElement('tr');
+    ash.className = 'section-hdr';
+    ash.innerHTML = '<td colspan="6">Amateur Scores — Friday only · best 2 of 5 per round count</td>';
+    tbody.appendChild(ash);
+
+    // --- Amateur Round 1 row ---
+    const r1 = document.createElement('tr');
+    r1.className = 'am-row';
+    r1.id = `amr1-${team.key}`;
+    let r1html = `<td class="rlabel"><strong>Amateurs</strong><br><span style="font-size:11px;color:#888">Round 1</span></td>`;
+    // Thu, Sat, Sun = blank; Fri = 5 inputs
+    r1html += `<td class="sc" style="background:#f3f1ea"></td>`; // Thu
+    r1html += `<td class="sc"><div class="am-grid" id="amgrid-r1-${team.key}">`;
+    const r1vals = team.amateurs.map(a => S[team.key].amR1[a]);
+    const b1 = best2(r1vals);
+    team.amateurs.forEach((am, i) => {
+      const v = S[team.key].amR1[am];
+      const isBest = b1.indices.includes(i);
+      r1html += `<div class="am-player">
+        <div class="am-name${isBest?' used':''}" id="amn-r1-${team.key}-${i}">${am}</div>
+        <input class="si${v?' '+sc(v):''}${isBest?' best-score':''}" type="text" inputmode="numeric" placeholder=""
+          value="${v}" style="width:44px;height:30px;font-size:15px"
+          data-team="${team.key}" data-am="${am}" data-round="r1"
+          oninput="handleAmScore(this)">
+      </div>`;
+    });
+    r1html += `</div></td>`;
+    r1html += `<td class="sc" style="background:#f3f1ea"></td>`; // Sat
+    r1html += `<td class="sc" style="background:#f3f1ea"></td>`; // Sun
+    const r1best = b1.total;
+    r1html += `<td class="sc subtotal" id="amsub-r1-${team.key}">${r1best!==null?scoreSpan(r1best):''}</td>`;
+    r1.innerHTML = r1html;
+    tbody.appendChild(r1);
+
+    // --- Amateur Round 2 row ---
+    const r2 = document.createElement('tr');
+    r2.className = 'am-row';
+    r2.id = `amr2-${team.key}`;
+    let r2html = `<td class="rlabel"><strong style="visibility:hidden">Amateurs</strong><br><span style="font-size:11px;color:#888">Round 2</span></td>`;
+    r2html += `<td class="sc" style="background:#f3f1ea"></td>`;
+    r2html += `<td class="sc"><div class="am-grid" id="amgrid-r2-${team.key}">`;
+    const r2vals = team.amateurs.map(a => S[team.key].amR2[a]);
+    const b2 = best2(r2vals);
+    team.amateurs.forEach((am, i) => {
+      const v = S[team.key].amR2[am];
+      const isBest = b2.indices.includes(i);
+      r2html += `<div class="am-player">
+        <div class="am-name${isBest?' used':''}" id="amn-r2-${team.key}-${i}">${am}</div>
+        <input class="si${v?' '+sc(v):''}${isBest?' best-score':''}" type="text" inputmode="numeric" placeholder=""
+          value="${v}" style="width:44px;height:30px;font-size:15px"
+          data-team="${team.key}" data-am="${am}" data-round="r2"
+          oninput="handleAmScore(this)">
+      </div>`;
+    });
+    r2html += `</div></td>`;
+    r2html += `<td class="sc" style="background:#f3f1ea"></td>`;
+    r2html += `<td class="sc" style="background:#f3f1ea"></td>`;
+    const r2best = b2.total;
+    r2html += `<td class="sc subtotal" id="amsub-r2-${team.key}">${r2best!==null?scoreSpan(r2best):''}</td>`;
+    r2.innerHTML = r2html;
+    tbody.appendChild(r2);
+
+    // --- Amateur best-2 summary row ---
+    const bsr = document.createElement('tr');
+    bsr.className = 'am-row';
+    let bshtml = `<td class="rlabel" style="font-size:11px;color:#888;font-style:italic">Best 2 each round</td>`;
+    bshtml += `<td class="sc" style="background:#f3f1ea"></td>`;
+    // Show which names were picked
+    bshtml += `<td class="sc" style="background:#ece9d8;font-size:11px;color:#2d5a27;vertical-align:middle" id="ambest-names-${team.key}">`;
+    bshtml += renderBestNames(team, r1vals, r2vals, b1, b2);
+    bshtml += `</td>`;
+    bshtml += `<td class="sc" style="background:#f3f1ea"></td>`;
+    bshtml += `<td class="sc" style="background:#f3f1ea"></td>`;
+    const amCombined = (r1best!==null?r1best:0) + (r2best!==null?r2best:0);
+    const amCombinedFinal = (r1best===null && r2best===null) ? null : amCombined;
+    bshtml += `<td class="sc subtotal" id="amsub-total-${team.key}">${amCombinedFinal!==null?scoreSpan(amCombinedFinal):''}</td>`;
+    bsr.innerHTML = bshtml;
+    tbody.appendChild(bsr);
+  });
+
+  rebuildTotals();
+}
+
+function renderBestNames(team, r1vals, r2vals, b1, b2) {
+  let html = '';
+  const r1names = b1.indices.map(i => team.amateurs[i]);
+  const r2names = b2.indices.map(i => team.amateurs[i]);
+  if (r1names.length) html += `<div>R1: ${r1names.join(', ')}</div>`;
+  if (r2names.length) html += `<div>R2: ${r2names.join(', ')}</div>`;
+  return html || '<span style="color:#ccc">—</span>';
+}
+
+
+
+function handleProScore(input) {
+  const { team, day } = input.dataset;
+  const val = input.value.trim();
+  S[team].proDay[day].score = val;
+  input.className = 'si ' + sc(val);
+
+  // Update pro subtotal (on last pro row)
+  const proScores = DAYS.map(d => S[team].proDay[d].score);
+  const proTotal = sumArr(proScores);
+  const sub = document.getElementById(`prosub-${team}`);
+  if (sub) sub.innerHTML = proTotal !== null ? scoreSpan(proTotal) : '';
+
+  rebuildTotals();
+}
+
+function handleAmScore(input) {
+  const { team, am, round } = input.dataset;
+  const stateKey = round === 'r1' ? 'amR1' : 'amR2';
+  const val = input.value.trim();
+  S[team][stateKey][am] = val;
+  input.className = `si ${sc(val)}`;
+
+  // Recalc best 2 for this round
+  const tObj = TEAMS.find(t => t.key === team);
+  const vals = tObj.amateurs.map(a => S[team][stateKey][a]);
+  const b = best2(vals);
+
+  // Update highlight on all inputs in this round
+  tObj.amateurs.forEach((a, i) => {
+    const inp = document.querySelector(`input[data-team="${team}"][data-am="${a}"][data-round="${round}"]`);
+    const nameEl = document.getElementById(`amn-${round}-${team}-${i}`);
+    if (inp) {
+      const v = S[team][stateKey][a];
+      inp.className = `si ${sc(v)}${b.indices.includes(i)?' best-score':''}`;
+    }
+    if (nameEl) nameEl.className = `am-name${b.indices.includes(i)?' used':''}`;
+  });
+
+  // Update round subtotal
+  const sub = document.getElementById(`amsub-${round}-${team}`);
+  if (sub) sub.innerHTML = b.total !== null ? scoreSpan(b.total) : '';
+
+  // Update combined amateur subtotal
+  const r1vals = tObj.amateurs.map(a => S[team].amR1[a]);
+  const r2vals = tObj.amateurs.map(a => S[team].amR2[a]);
+  const b1 = best2(r1vals);
+  const b2 = best2(r2vals);
+  const combined = (b1.total !== null || b2.total !== null) ? ((b1.total||0)+(b2.total||0)) : null;
+  const totalSub = document.getElementById(`amsub-total-${team}`);
+  if (totalSub) totalSub.innerHTML = combined !== null ? scoreSpan(combined) : '';
+
+  // Update best names cell
+  const namesCell = document.getElementById(`ambest-names-${team}`);
+  if (namesCell) namesCell.innerHTML = renderBestNames(tObj, r1vals, r2vals, b1, b2);
+
+  rebuildTotals();
+}
+
+function calcTeamTotal(team) {
+  const proScores = DAYS.map(d => S[team.key].proDay[d].score);
+  const proTotal = sumArr(proScores);
+
+  const r1vals = team.amateurs.map(a => S[team.key].amR1[a]);
+  const r2vals = team.amateurs.map(a => S[team.key].amR2[a]);
+  const b1 = best2(r1vals);
+  const b2 = best2(r2vals);
+  const amTotal = (b1.total !== null || b2.total !== null) ? ((b1.total||0)+(b2.total||0)) : null;
+
+  if (proTotal === null && amTotal === null) return null;
+  return (proTotal||0) + (amTotal||0);
+}
+
+function rebuildTotals() {
+  const totals = TEAMS.map(t => ({ team: t, total: calcTeamTotal(t) }));
+
+  totals.forEach(({ team, total }) => {
+    const el = document.getElementById(`ttn-${team.key}`);
+    if (el) {
+      el.className = 'tt-num' + (total !== null && total < 0 ? ' tt-under' : '');
+      el.textContent = total !== null ? fmt(total) : '—';
+    }
+  });
+
+  const sorted = [...totals].sort((a,b) => {
+    if (a.total===null && b.total===null) return 0;
+    if (a.total===null) return 1;
+    if (b.total===null) return -1;
+    return a.total - b.total;
+  });
+
+  const sb = document.getElementById('standings-body');
+  sb.innerHTML = '';
+  sorted.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'standings-row';
+    div.innerHTML = `<span class="standings-pos">${i+1}</span>
+      <span class="standings-name">${item.team.label}</span>
+      <span class="standings-score ${item.total!==null?sc(item.total):''}">${item.total!==null?fmt(item.total):'—'}</span>`;
+    sb.appendChild(div);
+  });
+}
+
+buildTable();
+</script>
+</body>
+</html>
