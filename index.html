@@ -189,17 +189,17 @@ const DAYS = ['Thursday','Friday','Saturday','Sunday'];
 const TEAMS = [
   {
     key: 'Dean', label: 'Team Dean',
-    pros: ['Scheffler','Rahm','Fleetwood','Young'],
+    pros: ['Young','Rahm','Fleetwood','Scheffler'],
     amateurs: ['Dean','Wyatt','Klovens','Drew','Santos']
   },
   {
     key: 'Dustin', label: 'Team Dustin',
-    pros: ['DeChambeau','Aberg','McIlroy','Matsuyama'],
+    pros: ['Matsuyama','Aberg','McIlroy','DeChambeau'],
     amateurs: ['Dustin','Chase','Mitch','Meep','Dan']
   },
   {
     key: 'Brandon', label: 'Team Brandon',
-    pros: ['Schauffele','Koepka','Gotterup','Day'],
+    pros: ['Day','Koepka','Gotterup','Schauffele'],
     amateurs: ['Brandon','Rob','Berkson','Sam','Clark']
   }
 ];
@@ -215,6 +215,9 @@ TEAMS.forEach(t => {
     amR2: {}
   };
   DAYS.forEach(d => S[t.key].proDay[d] = { pro: '', score: '' });
+  if (t.key === 'Dean')    S[t.key].proDay['Thursday'].score = '1';
+  if (t.key === 'Dustin')  S[t.key].proDay['Thursday'].score = '0';
+  if (t.key === 'Brandon') S[t.key].proDay['Thursday'].score = '-3';
   t.amateurs.forEach(a => { S[t.key].amR1[a] = ''; S[t.key].amR2[a] = ''; });
 });
 
