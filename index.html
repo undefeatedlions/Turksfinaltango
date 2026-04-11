@@ -189,12 +189,12 @@ const DAYS = ['Thursday','Friday','Saturday','Sunday'];
 const TEAMS = [
   {
     key: 'Dean', label: 'Team Dean',
-    pros: ['Young','Rahm','Fleetwood','Scheffler'],
+    pros: ['Young','Rahm','Scheffler','Fleetwood'],
     amateurs: ['Dean','Wyatt','Klovens','Drew','Santos']
   },
   {
     key: 'Dustin', label: 'Team Dustin',
-    pros: ['Matsuyama','Aberg','McIlroy','DeChambeau'],
+    pros: ['Matsuyama','DeChambeau','Aberg','McIlroy'],
     amateurs: ['Dustin','Chase','Mitch','Meep','Dan']
   },
   {
@@ -215,10 +215,30 @@ TEAMS.forEach(t => {
     amR2: {}
   };
   DAYS.forEach(d => S[t.key].proDay[d] = { pro: '', score: '' });
-  if (t.key === 'Dean')    S[t.key].proDay['Thursday'].score = '1';
-  if (t.key === 'Dustin')  S[t.key].proDay['Thursday'].score = '0';
-  if (t.key === 'Brandon') S[t.key].proDay['Thursday'].score = '-3';
+  if (t.key === 'Dean')    { S[t.key].proDay['Thursday'].score = '1'; S[t.key].proDay['Friday'].score = '-2'; }
+  if (t.key === 'Dustin')  { S[t.key].proDay['Thursday'].score = '0'; S[t.key].proDay['Friday'].score = '2'; }
+  if (t.key === 'Brandon') { S[t.key].proDay['Thursday'].score = '-3'; S[t.key].proDay['Friday'].score = '-3'; }
   t.amateurs.forEach(a => { S[t.key].amR1[a] = ''; S[t.key].amR2[a] = ''; });
+});
+
+// Round 1 amateur scores
+const R1 = {
+  Dean:    { Dean: '3', Wyatt: '5', Klovens: '17', Drew: '13', Santos: 'N/A' },
+  Dustin:  { Dustin: '10', Chase: '-4', Mitch: '16', Meep: '19', Dan: '10' },
+  Brandon: { Brandon: '10', Rob: '11', Berkson: 'N/A', Sam: '9', Clark: '11' }
+};
+TEAMS.forEach(t => {
+  t.amateurs.forEach(a => { if (R1[t.key][a] !== undefined) S[t.key].amR1[a] = R1[t.key][a]; });
+});
+
+// Round 2 amateur scores
+const R2 = {
+  Dean:    { Dean: '9', Wyatt: '6', Klovens: '14', Drew: '10', Santos: '28' },
+  Dustin:  { Dustin: '5', Chase: '9', Mitch: '10', Meep: '21', Dan: '13' },
+  Brandon: { Brandon: '3', Rob: '8', Berkson: '5', Sam: '5', Clark: '16' }
+};
+TEAMS.forEach(t => {
+  t.amateurs.forEach(a => { if (R2[t.key][a] !== undefined) S[t.key].amR2[a] = R2[t.key][a]; });
 });
 
 function sc(val) {
@@ -323,7 +343,7 @@ function buildTable() {
       r1html += `<div class="am-player">
         <div class="am-name${isBest?' used':''}" id="amn-r1-${team.key}-${i}">${am}</div>
         <input class="si${v?' '+sc(v):''}${isBest?' best-score':''}" type="text" inputmode="numeric" placeholder=""
-          value="${v}" style="width:44px;height:30px;font-size:15px"
+          value="${v}" style="width:44px;height:30px;font-size:${v==='N/A'?'11px':'15px'};color:${v==='N/A'?'#aaa':''};"
           data-team="${team.key}" data-am="${am}" data-round="r1"
           oninput="handleAmScore(this)">
       </div>`;
@@ -351,7 +371,7 @@ function buildTable() {
       r2html += `<div class="am-player">
         <div class="am-name${isBest?' used':''}" id="amn-r2-${team.key}-${i}">${am}</div>
         <input class="si${v?' '+sc(v):''}${isBest?' best-score':''}" type="text" inputmode="numeric" placeholder=""
-          value="${v}" style="width:44px;height:30px;font-size:15px"
+          value="${v}" style="width:44px;height:30px;font-size:${v==='N/A'?'11px':'15px'};color:${v==='N/A'?'#aaa':''};"
           data-team="${team.key}" data-am="${am}" data-round="r2"
           oninput="handleAmScore(this)">
       </div>`;
